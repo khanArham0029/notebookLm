@@ -47,7 +47,6 @@ https://www.theaiautomators.com/
 
 * **Chat with Your Documents:** Upload your documents and get instant, context-aware answers.
 * **Verifiable Citations:** Jump directly to the source of the information to ensure the AI isn't hallucinating.
-* **Podcast Generation:** Create audio summaries and discussions from your source materials, just like in NotebookLM.
 * **Private and Self-Hosted:** Maintain complete control over your data by hosting it yourself. Use local models if you wish.
 * **Customizable and Extensible:** Built with modern, accessible tools, making it easy to tailor to your specific needs.
 
