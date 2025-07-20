@@ -50,9 +50,6 @@ export type Database = {
       }
       notebooks: {
         Row: {
-          audio_overview_generation_status: string | null
-          audio_overview_url: string | null
-          audio_url_expires_at: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -65,9 +62,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          audio_overview_generation_status?: string | null
-          audio_overview_url?: string | null
-          audio_url_expires_at?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -80,9 +74,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          audio_overview_generation_status?: string | null
-          audio_overview_url?: string | null
-          audio_url_expires_at?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
