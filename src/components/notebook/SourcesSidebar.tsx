@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Trash2, Edit, Loader2, CheckCircle, XCircle, Upload } from 'lucide-react';
+import { Plus, MoreVertical, Trash2, Edit, Loader2, CheckCircle, XCircle, Upload, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import AddSourcesDialog from './AddSourcesDialog';
+import DocumentSelectionDialog from './DocumentSelectionDialog';
 import RenameSourceDialog from './RenameSourceDialog';
 import SourceContentViewer from '@/components/chat/SourceContentViewer';
 import { useSources } from '@/hooks/useSources';
@@ -28,7 +28,7 @@ const SourcesSidebar = ({
   onCitationClose,
   setSelectedCitation
 }: SourcesSidebarProps) => {
-  const [showAddSourcesDialog, setShowAddSourcesDialog] = useState(false);
+  const [showDocumentSelectionDialog, setShowDocumentSelectionDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [selectedSource, setSelectedSource] = useState<any>(null);
@@ -233,9 +233,9 @@ const SourcesSidebar = ({
         </div>
         
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowAddSourcesDialog(true)}>
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowDocumentSelectionDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add
+            Select Documents
           </Button>
         </div>
       </div>
@@ -283,18 +283,18 @@ const SourcesSidebar = ({
           ) : (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                <span className="text-gray-400 text-2xl">📄</span>
+                <FileText className="h-8 w-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Saved sources will appear here</h3>
-              <p className="text-sm text-gray-600 mb-4">Click Add source above to add PDFs, text, or audio files.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No documents selected</h3>
+              <p className="text-sm text-gray-600 mb-4">Click "Select Documents" above to choose from available documents.</p>
             </div>
           )}
         </div>
       </ScrollArea>
 
-      <AddSourcesDialog 
-        open={showAddSourcesDialog} 
-        onOpenChange={setShowAddSourcesDialog} 
+      <DocumentSelectionDialog 
+        open={showDocumentSelectionDialog} 
+        onOpenChange={setShowDocumentSelectionDialog} 
         notebookId={notebookId} 
       />
 
