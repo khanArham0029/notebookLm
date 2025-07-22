@@ -38,17 +38,22 @@ export const useNotebooks = () => {
       // Then get source counts separately for each notebook
       const notebooksWithCounts = await Promise.all(
         (notebooksData || []).map(async (notebook) => {
-          const { count, error: countError } = await supabase
-            .from('sources')
-            .select('*', { count: 'exact', head: true })
-            .eq('notebook_id', notebook.id);
+          try {
+            const { count, error: countError } = await supabase
+              .from('sources')
+              .select('*', { count: 'exact', head: true })
+              .eq('notebook_id', notebook.id);
 
-          if (countError) {
-            console.error('Error fetching source count for notebook:', notebook.id, countError);
+            if (countError) {
+              console.error('Error fetching source count for notebook:', notebook.id, countError);
+              return { ...notebook, sources: [{ count: 0 }] };
+            }
+
+            return { ...notebook, sources: [{ count: count || 0 }] };
+          } catch (error) {
+            console.error('Network error fetching source count for notebook:', notebook.id, error);
             return { ...notebook, sources: [{ count: 0 }] };
           }
-
-          return { ...notebook, sources: [{ count: count || 0 }] };
         })
       );
 
