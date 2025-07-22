@@ -9,7 +9,7 @@ import { useChatMessages } from '@/hooks/useChatMessages';
 import { useSources } from '@/hooks/useSources';
 import MarkdownRenderer from '@/components/chat/MarkdownRenderer';
 import SaveToNoteButton from './SaveToNoteButton';
-import AddSourcesDialog from './AddSourcesDialog';
+import DocumentSelectionDialog from './DocumentSelectionDialog';
 import { Citation } from '@/types/message';
 
 interface ChatAreaProps {
@@ -36,7 +36,7 @@ const ChatArea = ({
   const [pendingUserMessage, setPendingUserMessage] = useState<string | null>(null);
   const [showAiLoading, setShowAiLoading] = useState(false);
   const [clickedQuestions, setClickedQuestions] = useState<Set<string>>(new Set());
-  const [showAddSourcesDialog, setShowAddSourcesDialog] = useState(false);
+  const [showDocumentSelectionDialog, setShowDocumentSelectionDialog] = useState(false);
   
   const isGenerating = notebook?.generation_status === 'generating';
   
@@ -159,9 +159,9 @@ const ChatArea = ({
   const getPlaceholderText = () => {
     if (isChatDisabled) {
       if (sourceCount === 0) {
-        return "Upload a source to get started...";
+        return "Select documents to get started...";
       } else {
-        return "Please wait while your sources are being processed...";
+        return "Please wait while your documents are being processed...";
       }
     }
     return "Start typing...";
@@ -191,14 +191,14 @@ const ChatArea = ({
                     <h1 className="text-2xl font-medium text-gray-900">
                       {isGenerating ? 'Generating content...' : notebook?.title || 'Untitled Notebook'}
                     </h1>
-                    <p className="text-sm text-gray-600">{sourceCount} source{sourceCount !== 1 ? 's' : ''}</p>
+                    <p className="text-sm text-gray-600">{sourceCount} document{sourceCount !== 1 ? 's' : ''}</p>
                   </div>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-6 mb-6">
                   {isGenerating ? <div className="flex items-center space-x-2 text-gray-600">
                       
-                      <p>AI is analyzing your source and generating a title and description...</p>
+                      <p>AI is analyzing your documents and generating a title and description...</p>
                     </div> : <MarkdownRenderer content={notebook?.description || 'No description available for this notebook.'} className="prose prose-gray max-w-none text-gray-700 leading-relaxed" />}
                 </div>
 
@@ -249,7 +249,7 @@ const ChatArea = ({
                 <div className="flex-1 relative">
                   <Input placeholder={getPlaceholderText()} value={message} onChange={e => setMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && !isChatDisabled && !isSending && !pendingUserMessage && handleSendMessage()} className="pr-12" disabled={isChatDisabled || isSending || !!pendingUserMessage} />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                    {sourceCount} source{sourceCount !== 1 ? 's' : ''}
+                    {sourceCount} document{sourceCount !== 1 ? 's' : ''}
                   </div>
                 </div>
                 <Button onClick={() => handleSendMessage()} disabled={!message.trim() || isChatDisabled || isSending || !!pendingUserMessage}>
@@ -280,21 +280,21 @@ const ChatArea = ({
     <div className="flex-1 flex flex-col items-center justify-center p-8 overflow-hidden">
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-gray-100">
-              <Upload className="h-8 w-8 text-slate-600" />
+              <FileText className="h-8 w-8 text-slate-600" />
             </div>
-            <h2 className="text-xl font-medium text-gray-900 mb-4">Add a source to get started</h2>
-            <Button onClick={() => setShowAddSourcesDialog(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload a source
+            <h2 className="text-xl font-medium text-gray-900 mb-4">Select documents to get started</h2>
+            <Button onClick={() => setShowDocumentSelectionDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Select Documents
             </Button>
           </div>
 
           {/* Bottom Input */}
           <div className="w-full max-w-2xl">
             <div className="flex space-x-4">
-              <Input placeholder="Upload a source to get started" disabled className="flex-1" />
+              <Input placeholder="Select documents to get started" disabled className="flex-1" />
               <div className="flex items-center text-sm text-gray-500">
-                0 sources
+                0 documents
               </div>
               <Button disabled>
                 <Send className="h-4 w-4" />
@@ -308,8 +308,8 @@ const ChatArea = ({
         <p className="text-center text-sm text-gray-500">InsightsLM can be inaccurate; please double-check its responses.</p>
       </div>
       
-      {/* Add Sources Dialog */}
-      <AddSourcesDialog open={showAddSourcesDialog} onOpenChange={setShowAddSourcesDialog} notebookId={notebookId} />
+      {/* Document Selection Dialog */}
+      <DocumentSelectionDialog open={showDocumentSelectionDialog} onOpenChange={setShowDocumentSelectionDialog} notebookId={notebookId} />
     </div>;
 };
 
