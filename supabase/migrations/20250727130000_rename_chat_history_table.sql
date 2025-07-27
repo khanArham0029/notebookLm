@@ -1,0 +1,1 @@
+ALTER TABLE public.n8n_chat_histories RENAME TO chat_histories;

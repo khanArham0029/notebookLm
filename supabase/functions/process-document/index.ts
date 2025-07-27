@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -13,84 +12,44 @@ serve(async (req) => {
   }
 
   try {
-    const { sourceId, filePath, sourceType } = await req.json()
+    const { sourceId, filePath, notebookId } = await req.json()
 
-    if (!sourceId || !filePath || !sourceType) {
+    if (!sourceId || !filePath || !notebookId) {
       return new Response(
-        JSON.stringify({ error: 'sourceId, filePath, and sourceType are required' }),
+        JSON.stringify({ error: 'sourceId, filePath, and notebookId are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    console.log('Processing document:', { source_id: sourceId, file_path: filePath, source_type: sourceType });
+    console.log('Processing document:', { source_id: sourceId, file_path: filePath, notebook_id: notebookId });
 
-    // Get environment variables
-    const webhookUrl = Deno.env.get('DOCUMENT_PROCESSING_WEBHOOK_URL')
-    const authHeader = Deno.env.get('NOTEBOOK_GENERATION_AUTH')
-
-    if (!webhookUrl) {
-      console.error('Missing DOCUMENT_PROCESSING_WEBHOOK_URL environment variable')
-      
-      // Initialize Supabase client to update status
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      )
-
-      // Update source status to failed
-      await supabaseClient
-        .from('sources')
-        .update({ processing_status: 'failed' })
-        .eq('id', sourceId)
-
-      return new Response(
-        JSON.stringify({ error: 'Document processing webhook URL not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const backendUrl = Deno.env.get('PYTHON_BACKEND_URL');
+    if (!backendUrl) {
+      throw new Error('PYTHON_BACKEND_URL environment variable not set');
     }
 
-    console.log('Calling external webhook:', webhookUrl);
-
-    // Create the file URL for public access
-    const fileUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/sources/${filePath}`
-
-    // Prepare the payload for the webhook with correct variable names
-    const payload = {
-      source_id: sourceId,
-      file_url: fileUrl,
-      file_path: filePath,
-      source_type: sourceType,
-      callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/process-document-callback`
-    }
-
-    console.log('Webhook payload:', payload);
-
-    // Call external webhook with proper headers
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    }
-
-    if (authHeader) {
-      headers['Authorization'] = authHeader
-    }
-
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(`${backendUrl}/documents/process`, {
       method: 'POST',
-      headers: headers,
-      body: JSON.stringify(payload)
-    })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': req.headers.get('Authorization'),
+      },
+      body: JSON.stringify({
+        file_path: filePath,
+        source_id: sourceId,
+        notebook_id: notebookId,
+      })
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Webhook call failed:', response.status, errorText);
+      console.error('Backend call failed:', response.status, errorText);
       
-      // Initialize Supabase client to update status
       const supabaseClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       )
 
-      // Update source status to failed
       await supabaseClient
         .from('sources')
         .update({ processing_status: 'failed' })
@@ -103,7 +62,7 @@ serve(async (req) => {
     }
 
     const result = await response.json()
-    console.log('Webhook response:', result);
+    console.log('Backend response:', result);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Document processing initiated', result }),

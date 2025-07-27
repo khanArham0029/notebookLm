@@ -24,12 +24,9 @@ export const useAvailableDocuments = () => {
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['available-documents'],
     queryFn: async () => {
-      // For now, we'll fetch from sources table where they're not assigned to any notebook
-      // In a real implementation, you might have a separate 'available_documents' table
       const { data, error } = await supabase
-        .from('sources')
+        .from('available_documents')
         .select('*')
-        .is('notebook_id', null) // Documents not assigned to any notebook
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -43,9 +40,9 @@ export const useAvailableDocuments = () => {
     mutationFn: async ({ documentId, notebookId }: { documentId: string; notebookId: string }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Get the original document
+      // Get the original document from available_documents
       const { data: originalDoc, error: fetchError } = await supabase
-        .from('sources')
+        .from('available_documents')
         .select('*')
         .eq('id', documentId)
         .single();

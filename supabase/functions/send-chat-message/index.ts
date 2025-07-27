@@ -1,5 +1,3 @@
-
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -8,7 +6,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,47 +15,36 @@ serve(async (req) => {
     
     console.log('Received message:', { session_id, message, user_id });
 
-    // Get the webhook URL and auth header from environment
-    const webhookUrl = Deno.env.get('NOTEBOOK_CHAT_URL');
-    const authHeader = Deno.env.get('NOTEBOOK_GENERATION_AUTH');
-    
-    if (!webhookUrl) {
-      throw new Error('NOTEBOOK_CHAT_URL environment variable not set');
+    const backendUrl = Deno.env.get('PYTHON_BACKEND_URL');
+    if (!backendUrl) {
+      throw new Error('PYTHON_BACKEND_URL environment variable not set');
     }
 
-    if (!authHeader) {
-      throw new Error('NOTEBOOK_GENERATION_AUTH environment variable not set');
-    }
-
-    console.log('Sending to webhook with auth header');
-
-    // Send message to n8n webhook with authentication
-    const webhookResponse = await fetch(webhookUrl, {
+    const response = await fetch(`${backendUrl}/chat/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': authHeader,
+        'Authorization': req.headers.get('Authorization'),
       },
       body: JSON.stringify({
         session_id,
         message,
         user_id,
-        timestamp: new Date().toISOString()
       })
     });
 
-    if (!webhookResponse.ok) {
-      console.error(`Webhook responded with status: ${webhookResponse.status}`);
-      const errorText = await webhookResponse.text();
-      console.error('Webhook error response:', errorText);
-      throw new Error(`Webhook responded with status: ${webhookResponse.status}`);
+    if (!response.ok) {
+      console.error(`Backend responded with status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Backend error response:', errorText);
+      throw new Error(`Backend responded with status: ${response.status}`);
     }
 
-    const webhookData = await webhookResponse.json();
-    console.log('Webhook response:', webhookData);
+    const responseData = await response.json();
+    console.log('Backend response:', responseData);
 
     return new Response(
-      JSON.stringify({ success: true, data: webhookData }),
+      JSON.stringify({ success: true, data: responseData }),
       { 
         headers: { 
           ...corsHeaders,
@@ -72,7 +58,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to send message to webhook' 
+        error: error.message || 'Failed to send message to backend' 
       }),
       { 
         status: 500,
@@ -84,4 +70,3 @@ serve(async (req) => {
     );
   }
 });
-

@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+supabase
+langchain
+langchain-openai
+openai
+PyJWT
+aiohttp
+PyMuPDF
+python-multipart
+pydantic

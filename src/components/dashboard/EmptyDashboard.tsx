@@ -1,5 +1,10 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+
+interface EmptyDashboardProps {
+  onNewNotebook: () => void;
+}
 import { Upload, FileText, Globe, Video, Mic } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotebooks } from '@/hooks/useNotebooks';
@@ -58,7 +63,7 @@ const EmptyDashboard = () => {
       </div>
 
       <Button onClick={handleCreateNotebook} size="lg" className="bg-blue-600 hover:bg-blue-700" disabled={isCreating}>
-        <Plus className="h-5 w-5 mr-2" />
+        <PlusCircle className="h-5 w-5 mr-2" />
         {isCreating ? 'Creating...' : 'Create notebook'}
       </Button>
     </div>;

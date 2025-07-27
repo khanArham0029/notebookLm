@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
@@ -7,7 +6,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,68 +15,56 @@ serve(async (req) => {
     
     console.log(`Process additional sources received ${type} request for notebook ${notebookId}`);
 
-    // Get the webhook URL from Supabase secrets
-    const webhookUrl = Deno.env.get('ADDITIONAL_SOURCES_WEBHOOK_URL');
-    if (!webhookUrl) {
-      throw new Error('ADDITIONAL_SOURCES_WEBHOOK_URL not configured');
+    const backendUrl = Deno.env.get('PYTHON_BACKEND_URL');
+    if (!backendUrl) {
+      throw new Error('PYTHON_BACKEND_URL environment variable not set');
     }
 
-    // Get the auth token from Supabase secrets (same as generate-notebook-content)
-    const authToken = Deno.env.get('NOTEBOOK_GENERATION_AUTH');
-    if (!authToken) {
-      throw new Error('NOTEBOOK_GENERATION_AUTH not configured');
-    }
-
-    // Prepare the webhook payload
-    let webhookPayload;
+    let payload;
     
     if (type === 'multiple-websites') {
-      webhookPayload = {
+      payload = {
         type: 'multiple-websites',
         notebookId,
         urls,
-        sourceIds, // Array of source IDs corresponding to the URLs
-        timestamp
+        sourceIds,
       };
     } else if (type === 'copied-text') {
-      webhookPayload = {
+      payload = {
         type: 'copied-text',
         notebookId,
         title,
         content,
-        sourceId: sourceIds?.[0], // Single source ID for copied text
-        timestamp
+        sourceIds,
       };
     } else {
       throw new Error(`Unsupported type: ${type}`);
     }
 
-    console.log('Sending webhook payload:', JSON.stringify(webhookPayload, null, 2));
+    console.log('Sending payload:', JSON.stringify(payload, null, 2));
 
-    // Send to webhook with authentication
-    const response = await fetch(webhookUrl, {
+    const response = await fetch(`${backendUrl}/sources/process-additional`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': authToken,
-        ...corsHeaders
+        'Authorization': req.headers.get('Authorization'),
       },
-      body: JSON.stringify(webhookPayload)
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Webhook request failed:', response.status, errorText);
-      throw new Error(`Webhook request failed: ${response.status} - ${errorText}`);
+      console.error('Backend request failed:', response.status, errorText);
+      throw new Error(`Backend request failed: ${response.status} - ${errorText}`);
     }
 
-    const webhookResponse = await response.text();
-    console.log('Webhook response:', webhookResponse);
+    const responseData = await response.json();
+    console.log('Backend response:', responseData);
 
     return new Response(JSON.stringify({ 
       success: true, 
-      message: `${type} data sent to webhook successfully`,
-      webhookResponse 
+      message: `${type} data sent to backend successfully`,
+      responseData 
     }), {
       headers: { 
         'Content-Type': 'application/json',
